@@ -9,6 +9,7 @@ src    += Glob('Arm-2D/Helper/Source/*.c')
 
 path    = [cwd + '/Arm-2D/Library/Include']
 path   += [cwd + '/Arm-2D/Helper/Include']
+path   += [cwd + '/example']
 
 LOCAL_CCFLAGS = ''
 
