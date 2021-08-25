@@ -74,6 +74,13 @@ IMPL_PFB_ON_DRAW(__pfb_draw_handler_t)
         (arm_2d_color_rgb565_t){GLCD_COLOR_BLUE},
         128);
 
+    tBox.tLocation.iX -= 10;
+    tBox.tLocation.iY -= 10;
+    tBox.tSize.iHeight = 1;
+    tBox.tSize.iWidth  = 50;
+
+    arm_2d_rgb16_fill_colour(ptTile, &tBox, GLCD_COLOR_BLUE);
+
     lcd_text_location(0, 0);
     lcd_printf("Arm-2D\n");
 

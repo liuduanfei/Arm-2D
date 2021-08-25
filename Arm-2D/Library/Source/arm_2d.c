@@ -1111,7 +1111,7 @@ arm_2d_op_status_t arm_2d_get_op_status(arm_2d_op_core_t *ptOP)
 
 
 __WEAK
- /*! \brief arm-2d pixel pipeline task entery
+ /*! \brief arm-2d pixel pipeline task entry
   *! \note  This function is *TRHEAD-SAFE*
   *! \param none
   *! \retval arm_fsm_rt_cpl The sub-task FIFO is empty, the caller, i.e. the host

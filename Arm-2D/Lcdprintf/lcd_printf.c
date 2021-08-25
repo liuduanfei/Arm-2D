@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
+
 #include <board.h>
 
 #define GLCD_WIDTH  LCD_WIDTH
