@@ -20,7 +20,11 @@ path   += [cwd + '/Arm-2D/Helper/Include']
 path   += [cwd + '/example']
 
 LOCAL_CCFLAGS = ''
+CPPDEFINES = []
 
-group = DefineGroup('Arm-2D', src, depend = ['PKG_USING_ARM_2D'], CPPPATH = path, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
+if GetDepend('PKG_ARM_2D_USE_INTERPOLATION_ROTATION'):
+	CPPDEFINES = ['__ARM_2D_HAS_INTERPOLATION_ROTATION__=1']
+
+group = DefineGroup('Arm-2D', src, depend = ['PKG_USING_ARM_2D'], CPPPATH = path, CPPDEFINES = CPPDEFINES, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
 
 Return('group')
