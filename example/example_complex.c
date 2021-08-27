@@ -53,6 +53,61 @@ IMPL_PFB_ON_LOW_LV_RENDERING(__pfb_render_handler)
                                                 (arm_2d_pfb_t *)ptPFB);
 }
 
+typedef struct {
+    arm_2d_op_rotate_alpha_t tOP;
+    const arm_2d_tile_t *ptTile;
+    float fAngle;
+    float fAngleSpeed;
+    arm_2d_location_t tCentre;
+    arm_2d_region_t tRegion;
+    uint8_t chOpacity;
+} dog_head_t;
+
+static
+dog_head_t s_tDog[] =
+{
+    {
+        .ptTile = &c_tiledog,
+        .fAngleSpeed = -5.0f,
+        .tCentre = {
+            .iX = 30,
+            .iY = 30,
+        },
+        .tRegion = {
+            .tLocation = {
+                .iX = (90),
+                .iY = (90),
+            },
+            .tSize = {
+                .iWidth = 60,
+                .iHeight = 60,
+            },
+        },
+        .chOpacity = 255,
+    },
+
+    {
+        .ptTile = &c_tiledog,
+        .fAngleSpeed = 10.0f,
+        .tCentre = {
+            .iX = -30,
+            .iY = -30,
+        },
+        .tRegion = {
+            .tLocation = {
+                .iX = (90),
+                .iY = (90),
+            },
+            .tSize = {
+                .iWidth = 60,
+                .iHeight = 60,
+            },
+        },
+        .chOpacity = 128,
+    },
+};
+
+
 static uint32_t iWidth = 0;
 
 void timeout_entry(void *p)
@@ -70,12 +125,41 @@ IMPL_PFB_ON_DRAW(__pfb_draw_handler)
 
     arm_2d_rgb16_fill_colour(ptTile, NULL, GLCD_COLOR_WHITE);
 
+    arm_foreach (dog_head_t, s_tDog) {
+
+        if (bIsNewFrame) {
+            _->fAngle += ARM_2D_ANGLE(_->fAngleSpeed);
+
+            _->fAngle = fmodf(_->fAngle, ARM_2D_ANGLE(360));
+        }
+
+        if (255 == _->chOpacity) {
+            arm_2dp_rgb565_tile_rotation(
+                                            (arm_2d_op_rotate_t *)&(_->tOP),
+                                            _->ptTile,          //!< source tile
+                                            ptTile,             //!< target tile
+                                            &(_->tRegion),      //!< target region
+                                            _->tCentre,         //!< center point
+                                            _->fAngle,          //!< rotation angle
+                                            GLCD_COLOR_WHITE);  //!< masking colour
+
+        } else {
+            arm_2dp_rgb565_tile_rotation_with_alpha(
+                                            &(_->tOP),
+                                            _->ptTile,          //!< source tile
+                                            ptTile,             //!< target tile
+                                            &(_->tRegion),      //!< target region
+                                            _->tCentre,         //!< center point
+                                            _->fAngle,          //!< rotation angle
+                                            GLCD_COLOR_WHITE,   //!< masking colour
+                                            _->chOpacity);      //!< Opacity
+        }
+    }
+
+
     arm_2d_region_t tTargetRegion = c_tiledog.tRegion;
     arm_2d_region_t tBarRegion;
 
-    if (bIsNewFrame) {
-
-    }
 
     tTargetRegion.tLocation.iX = (LCD_WIDTH - c_tiledog.tRegion.tSize.iWidth) / 2 - (c_tiledog.tRegion.tSize.iWidth / 2);
     tTargetRegion.tLocation.iY = (LCD_HEIGHT - c_tiledog.tRegion.tSize.iHeight) / 2;
