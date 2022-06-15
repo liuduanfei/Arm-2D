@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Arm Limited or its affiliates. All rights reserved.
+ * Copyright (C) 2022 Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,8 +22,8 @@
  * Description:  Public header file to contain the all avaialble Arm-2D 
  *               interface header files 
  *
- * $Date:        01. December 2020
- * $Revision:    V.0.5.0
+ * $Date:        31. May 2022
+ * $Revision:    V.1.0.1
  *
  * Target Processor:  Cortex-M cores
  * -------------------------------------------------------------------- */
@@ -38,13 +38,36 @@
 #include "arm_2d_draw.h"
 #include "arm_2d_conversion.h"
 #include "arm_2d_alpha_blending.h"
-#include "arm_2d_rotation.h"
+#include "arm_2d_transform.h"
 
 #ifdef   __cplusplus
 extern "C" {
 #endif
 
+/*! \brief suppress some warnings for user applications when using arm-2d.
+ */
+#if defined(__clang__)
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
+#elif defined(__IS_COMPILER_ARM_COMPILER_5__)
+#   pragma diag_suppress 1296,174
+#endif
+
 /*============================ MACROS ========================================*/
+
+//! \name arm-2d version
+//! @{
+#define ARM_2D_VERSION_MAJOR        1
+#define ARM_2D_VERSION_MINOR        0
+#define ARM_2D_VERSION_PATCH        0
+#define ARM_2D_VERSION_STR          "preview"   
+
+#define ARM_2D_VERISON              (   ARM_2D_VERSION_MAJOR * 10000ul          \
+                                    +   ARM_2D_VERSION_MINOR * 100ul            \
+                                        ARM_2D_VERSION_PATCH)
+//! @}
+
 /*============================ MACROFIED FUNCTIONS ===========================*/
 /*============================ TYPES =========================================*/
 
@@ -54,127 +77,103 @@ typedef struct {
     uint8_t                                             : 6;
 } arm_2d_runtime_feature_t;
 
+typedef struct {
+    uint8_t     Major;
+    uint8_t     Minor;
+    uint8_t     Patch;
+    uint8_t                 : 8;
+} arm_2d_version_t;
+
 /*============================ GLOBAL VARIABLES ==============================*/
 
 extern
 arm_2d_runtime_feature_t ARM_2D_RUNTIME_FEATURE;
 
+extern 
+const arm_2d_version_t ARM_2D_VERSION;
+
 /*============================ PROTOTYPES ====================================*/
 
-#if defined(__ARM_2D_HAS_ASYNC__) && __ARM_2D_HAS_ASYNC__
-/*! \brief initialise the whole arm-2d service
- *! \param none
- *! \return none
+/*! 
+ * \brief initialise arm-2d
  */
 extern
-void __arm_2d_async_init(void);
-#endif
+void arm_2d_init(void);
 
-#if defined(__ARM_2D_HAS_HELIUM__) && __ARM_2D_HAS_HELIUM__
-/*! \brief initialise the helium service
- *! \param none
- *! \return none
- */
-extern
-void __arm_2d_helium_init(void);
-#endif
-
-#if defined(__ARM_2D_HAS_CDE__) && __ARM_2D_HAS_CDE__
-/*! \brief initialise the cde service
- *! \param none
- *! \return none
- */
-extern
-void __arm_2d_cde_init(void);
-#endif
-
-
-
-#if defined(__ARM_2D_HAS_HW_ACC__) && __ARM_2D_HAS_HW_ACC__
-/*! \brief initialise the hardware accelerator adapter
- *! \param none
- *! \return none
- */
-extern
-void __arm_2d_acc_init(void);
-#endif
-
-
-/*! \brief initialise the whole arm-2d service
- *! \param none
- *! \return none
- */
-extern
-void __arm_2d_init(void);
-
-/*! \brief set the default frame buffer
- *! \param ptFramebuffer the new frame buffer, if NULL is given, no default
- *!       frame buffer will be used
- *! \return the address of the old frame buffer
+/*!
+ * \brief set the default frame buffer
+ * \param ptFramebuffer the new frame buffer, 
+ * \note  if NULL is given, no default frame buffer will be used
+ * \return arm_2d_tile_t* the address of the old frame buffer
  */
 extern 
 arm_2d_tile_t *arm_2d_set_default_frame_buffer(
                                         const arm_2d_tile_t *ptFrameBuffer);
 
-
-/*! \brief get the default frame buffer
- *! \return the address of the default frame buffer
+/*! 
+ * \brief get the default frame buffer
+ * \return arm_2d_tile_t* the address of the default frame buffer
  */
 extern
 arm_2d_tile_t *arm_2d_get_default_frame_buffer(void);
 
-/*! \brief attach a user param (which could be a pointer) to specified OP
- *! \param ptOP the address of the target OP (NULL means using the default OP)
- *! \param pUserParam a user param (it can be used as a pointer)
+/*! 
+ * \brief attach a user param (which could be a pointer) to specified OP
+ * \param ptOP the address of the target OP (NULL means using the default OP)
+ * \param pUserParam a user parameter (it can be used as a pointer)
  */
 extern
 void arm_2d_set_user_param(arm_2d_op_core_t *ptOP, uintptr_t pUserParam);
 
-
-/*! \brief sync up with operation 
- *! \retval true sync up with operation
- *! \retval false operation is busy
+/*! 
+ * \brief wait asynchronouse operation complete
+ * \retval true sync up with operation
+ * \retval false operation is busy
  */
 extern
 bool arm_2d_op_wait_async(arm_2d_op_core_t *ptOP);
 
-/*! \brief get the status of a specified OP, usually, it is used after calling
- *!        arm_2d_op_wait_async(). 
- *!        E.g.
- 
-            //! wait for previous operation complete
-            do {
-                arm_2d_op_wait_async();
-                arm_2d_op_status_t tStatus = arm_2d_get_op_status();
-                if (tStatus.bIOError) {
-                    //! error detected
-                    ...
-                } else if (tStatus.bOpCpl) {
-                    break;
-                }
-            } while(true);
- *!
- *! \param ptOP the address of the target OP (NULL means using the default OP)
- *! \return the status
+/*! 
+   \brief get the status of a specified OP, 
+   \param ptOP the address of the target OP (NULL means using the default OP)
+   \return arm_2d_op_status_t the operation status
+ */
+/*
+    usually, it is used after calling arm_2d_op_wait_async(). 
+    E.g.
+    //! wait for previous operation complete
+    do {
+        arm_2d_op_wait_async();
+        arm_2d_op_status_t tStatus = arm_2d_get_op_status();
+        if (tStatus.bIOError) {
+            //! error detected
+            ...
+        } else if (tStatus.bOpCpl) {
+            break;
+        }
+    } while(true);
  */
 extern
 arm_2d_op_status_t arm_2d_get_op_status(arm_2d_op_core_t *ptOP);
 
- /*! \brief arm-2d pixel pipeline task entery
-  *! \note  This function is *TRHEAD-SAFE*
-  *! \param none
-  *! \retval arm_fsm_rt_cpl The sub-task FIFO is empty, the caller, i.e. the host
-  *!            RTOS thread can block itself by waiting for a semaphore which is
-  *!            set by arm_2d_notif_sub_task_fifo_task_arrive()
-  *! \retval arm_fsm_rt_on_going The arm_2d_task issued one sub-task without 
-  *!            problem and it yields. 
-  *! \retval arm_fsm_rt_async You shouldn't see this value
-  *! \retval arm_fsm_rt_wait_for_obj some algorithm or hardware accelerator wants
-  *!            to sync-up with applications.
-  *! \retval (<0) Serious error is detected.
-  */
+/*! 
+ * \brief arm-2d pixel pipeline task entery
+ * \note  This function is *TRHEAD-SAFE*
+ * \param ptTask the address of an arm-2d task control block
+ * \retval arm_fsm_rt_cpl The sub-task FIFO is empty, the caller can wait for a 
+ *         semaphore set by arm_2d_notif_sub_task_fifo_task_arrive()
+ * \retval arm_fsm_rt_on_going The arm_2d_task yields 
+ * \retval arm_fsm_rt_async You shouldn't see this value
+ * \retval arm_fsm_rt_wait_for_obj hardware accelerator wants to sync-up with applications.
+ * \retval (<0) Serious error is detected.
+ */
 extern
 arm_fsm_rt_t arm_2d_task(arm_2d_task_t *ptTask);
+
+/*! \note delibrately comment out */
+//#if defined(__clang__)
+//#   pragma clang diagnostic pop
+//#endif
 
 #ifdef   __cplusplus
 }
