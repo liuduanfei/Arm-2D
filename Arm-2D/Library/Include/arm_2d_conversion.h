@@ -22,8 +22,8 @@
  * Description:  Public header file to contain the APIs for colour space
  *               conversions
  *
- * $Date:        01. December 2020
- * $Revision:    V.0.5.0
+ * $Date:        16. Nov 2021
+ * $Revision:    V.1.0.0
  *
  * Target Processor:  Cortex-M cores
  * -------------------------------------------------------------------- */
@@ -41,11 +41,31 @@ extern "C" {
 
 #if defined(__clang__)
 #   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
+#   pragma clang diagnostic ignored "-Wdeclaration-after-statement"
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
 #   pragma clang diagnostic ignored "-Wsign-conversion"
+#elif defined(__IS_COMPILER_IAR__)
+#   pragma diag_suppress=Go029 
 #endif
 
 /*============================ MACROS ========================================*/
 /*============================ MACROFIED FUNCTIONS ===========================*/
+
+#define arm_2d_convert_colour_to_rgb888(__SRC_ADDR, /*!< source tile address */ \
+                                        __DES_ADDR /*!< target tile address */) \
+            arm_2dp_convert_colour_to_rgb888(   NULL,                           \
+                                                (__SRC_ADDR),                   \
+                                                (__DES_ADDR))
+
+#define arm_2d_convert_colour_to_rgb565(__SRC_ADDR, /*!< source tile address */ \
+                                        __DES_ADDR /*!< target tile address */) \
+            arm_2dp_convert_colour_to_rgb565(   NULL,                           \
+                                                (__SRC_ADDR),                   \
+                                                (__DES_ADDR))
+
 /*============================ TYPES =========================================*/
 
 typedef arm_2d_op_src_t arm_2d_op_cl_convt_t;
@@ -56,11 +76,12 @@ typedef arm_2d_op_src_t arm_2d_op_cl_convt_t;
  *!        autovectorizer friendly format
  */
 typedef union {
-    uint16_t        RGB[3];
+    uint16_t            RGBA[4];
     struct {
         uint16_t        R;
         uint16_t        G;
         uint16_t        B;
+        uint16_t        A;
     };
 } __arm_2d_color_fast_rgb_t;
 
@@ -74,16 +95,21 @@ typedef union {
 __STATIC_INLINE void __arm_2d_rgb565_unpack(uint16_t hwColor,
                                             __arm_2d_color_fast_rgb_t * ptRGB)
 {
+    assert(NULL != ptRGB);
+    
     /* uses explicit extraction, leading to a more efficient autovectorized code */
     uint16_t maskRunpk = 0x001f, maskGunpk = 0x003f;
 
     ptRGB->R = (uint16_t) ((hwColor & maskRunpk) << 3);
     ptRGB->B = (uint16_t) ((hwColor >> 11) << 3);
     ptRGB->G = (uint16_t) (((hwColor >> 5) & maskGunpk) << 2);
+    ptRGB->A = 0xFF;
 }
 
 __STATIC_INLINE uint16_t __arm_2d_rgb565_pack(__arm_2d_color_fast_rgb_t * ptRGB)
 {
+    assert(NULL != ptRGB);
+    
     arm_2d_color_rgb565_t tOutput = {
         .u5R = (uint16_t) ptRGB->R >> 3,
         .u6G = (uint16_t) ptRGB->G >> 2,
@@ -92,30 +118,40 @@ __STATIC_INLINE uint16_t __arm_2d_rgb565_pack(__arm_2d_color_fast_rgb_t * ptRGB)
     return tOutput.tValue;
 }
 
-__STATIC_INLINE uint32_t __arm_2d_rgb888_pack(__arm_2d_color_fast_rgb_t * ptRGB)
+__STATIC_INLINE uint32_t __arm_2d_cccn888_pack(__arm_2d_color_fast_rgb_t * ptRGB)
 {
-    arm_2d_color_rgb888_t tOutput = {
+    assert(NULL != ptRGB);
+    
+    arm_2d_color_rgba8888_t tOutput = {
         .u8R = (uint16_t) ptRGB->R,
         .u8G = (uint16_t) ptRGB->G,
         .u8B = (uint16_t) ptRGB->B,
+        .u8A = (uint16_t) ptRGB->A,
     };
     return tOutput.tValue;
 }
 
 
+/*----------------------------------------------------------------------------*
+ * Colour Conversion                                                          *
+ *----------------------------------------------------------------------------*/
 
 extern
-ARM_NONNULL(1)
-arm_fsm_rt_t arm_2d_convert_colour_to_rbg888(   const arm_2d_tile_t *ptSource,
+ARM_NONNULL(2,3)
+arm_fsm_rt_t arm_2dp_convert_colour_to_rgb888(  arm_2d_op_cl_convt_t *ptOP,
+                                                const arm_2d_tile_t *ptSource,
                                                 const arm_2d_tile_t *ptTarget);
 
 extern
-ARM_NONNULL(1)
-arm_fsm_rt_t arm_2d_convert_colour_to_rgb565(   const arm_2d_tile_t *ptSource,
+ARM_NONNULL(2,3)
+arm_fsm_rt_t arm_2dp_convert_colour_to_rgb565(  arm_2d_op_cl_convt_t *ptOP,
+                                                const arm_2d_tile_t *ptSource,
                                                 const arm_2d_tile_t *ptTarget);
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
+#elif defined(__IS_COMPILER_IAR__)
+#   pragma diag_warning=Go029 
 #endif
 
 #ifdef   __cplusplus

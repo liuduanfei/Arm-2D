@@ -2,7 +2,7 @@
 
 **NOTE:** 
 
-1. This library is a research project used to explore and demonstrate the possibilities of delivering smart-phone modern graphic user interface using low-cost and resource constraint micro-controllers. It is not a committed product from Arm, and the quality of the service is not validated with sophisticated tests but some functional tests. 
+1. This library is a research project used to explore and demonstrate the possibilities of delivering modernized graphic user interfaces using low-cost and resource constraint micro-controllers. It's not a committed product yet from Arm, and the quality of the service is not validated with a sophisticated test suit but some functional tests. 
 2.  The library name, i.e. **Arm-2D**, is a temporary term and might be subject to change in the future. The term "the Library" used in this documents refers to the **Arm-2D** library unless state otherwise. 
 
 
@@ -11,56 +11,61 @@
 
 | Branch Name                               | Description                                                  | Note                                                         |
 | ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ***master/main***                         | The main branch of the repository. It contains the Arm-2D library and simple examples. |                                                              |
-| ***main-arm-2d-developing***              | The development branch for the ***main*** branch.            | It will be merged into ***main*** branch.                    |
-| ***main-arm-2d-more-examples***           | It has the same content as ***main*** branch but with additional examples. <br />The purpose of this branch is **adding more examples** for people who want to try while still **keeping the main branch simple and small**. <br />**NOTE**: This branch will not modify anything in the Arm-2D library but only focuse on examples. |                                                              |
-| ***main-arm-2d-more-example-developing*** | It is the development branch for the ***main-arm-2d-more-examples-developing*** branch. | The ***main*** branch will be merged into this one which will be merged into the ***main-arm-2d-more-examples*** branch later. |
+| ***master/main***                         | The main branch of the repository. It contains the Arm-2D library, examples, templates and a helper library. |                                                              |
+| ***main-arm-2d-developing***              | The development branch of the ***master/main*** branch.      | It will be merged into ***main*** branch.                    |
+| ***main-arm-2d-more-examples***           | It has the same content as the ***master/main*** branch with additional examples. <br />The purpose of this branch is **adding more examples** while **keeping the main branch simple and small**. |                                                              |
+| ***main-arm-2d-more-example-developing*** | It is the development branch of the ***main-arm-2d-more-examples-developing*** branch. | The ***main*** branch is merged into this one which is merged into the ***main-arm-2d-more-examples*** branch later. |
 
 
 
 ## Features of the Arm-2D Library
 
-#### In this release ( ver0.9.8 )
+#### In this release ( ver1.0.0-preview-beta1)
 
-The Arm-2D library provides **Low-Level 2D Image Processing Services** that are mainly used in **Display system**. The supported features include but not limited to:
+The Arm-2D library provides **Low-Level 2D Image Processing Services** that are mainly used in **Deep Embedded Display system**. The supported features include but not limited to:
 
-- **Alpha-Blending**
-  - With or without Colour-Masking
-- **Image Copy / Texture Paving**
-  - With or without Colour-Masking
-  - Four mirroring mode: None, X-mirroring, Y-mirroring and XY-mirroring
-- **Colour format conversions**
-  - RGB565 and RGB888
-  - Generic RGB16 and RGB32
+- **Support Accelerating LVGL** (**v8.2.0** or newer)
+- **CMSIS-Pack is available.**
+- **Alpha-Blending** / **Alpha-Masking**
+  - With or without Colour-Keying
+  - Colour-filling with an Alpha-Mask
+    - For drawing icons/texts with anti-alias in a specified colour
+    - Supports an optional ***Opacity*** ratio can be applied.
+- **Image Copy / Tiling**
+  - With or without Colour-Keying (a.k.a colour masking)
+  - Supports four mirroring modes: No-mirroring, X-mirroring, Y-mirroring and XY-mirroring
+  - Supports **alpha masks** on the source side and/or the target side 
+- **Supported Colour formats**
+  - **8-bit Grayscale**, **RGB565** and **RGB888**
+  - Generic **8bit colour**, **RGB16** and **RGB32**
+  - Converting colour formats between **RGB565** and **RGB888** for any given tiles
 - **Region/Window Clipping**
-- **Generic Partial Frame-buffer (PFB) Support**
+- **Generic Partial Frame-buffer (PFB)**
   - Transparent for upper layer software/GUI services
   - Easy to Use
   - No limitation on target screen resolution
-  - No limitation on PFB size and shape (it could be line or cube with any size)
-  - Support the Dirty Region List
-  - Support swapping RGB16 high and low bytes.
-  - Has built-in frame buffer pool and it is easy to support 3FB. 
-  - Support User-specified buffers
-- **Rotation**
-  - Support for the Colour-masking by default
-  - Rotation with/without alpha-blending
-    - Anti-alias support is added. You can enable it by defining macro  **\_\_ARM_2D_HAS_INTERPOLATION_ROTATION\_\_** and set it to "**1**"
-- **Unified and User Friendly Programmers' Mode**
-  - APIs could be used in Synchronous manner (  **Classic Blocking code** ) and/or Asynchronous manner ( **Event-Driven** )
-  - Support both bare-metal and RTOS
+  - No limitation on PFB size and shape (it could be a line or a rectangular with any size)
+  - Supports the **Dirty Regions** when performing the low level refreshing
+  - Supports swapping high and low bytes for RGB16 pixels
+  - Has built-in frame buffer pool and supports 3-FB scheme
+- **Transform** (i.e. rotation and scaling)
+  - Supports Colour-keying by default
+  - Supports an optional **Opacity** ratio
+  - Supports the Anti-Alias feature. 
+    - You can enable it by defining macro  **\_\_ARM_2D_HAS_ANTI_ALIAS_TRANSFORM to "**1**" on **compile-time**.
+  - Support source masks
+- **An Unified and User-Friendly Programmers' Model**
+  - APIs can be used in **Synchronous** manner (  **Classic and Blocking** ) and/or **Asynchronous** manner ( **Event-Driven** )
+  - Supports both **bare-metal** and **RTOS** environment
   - Ultra small memory footprint
 
 
 
 ### Planned in the Future
 
-Following features are planned and to be introduced in the near future:
+Following features are planned and to be introduced in the future versions:
 
-- **Alpha (bitmap) Masking schemes** 
-  - New APIs will be added to Copy, Paving and Rotation.
-- **Image Filters, e.g. Anti-aliasing algorithms**
-- **Zooming/Stretching Algorithms**
+- **Image Filters, e.g. Generic Anti-aliasing algorithms**
 
 
 
@@ -68,15 +73,15 @@ Following features are planned and to be introduced in the near future:
 
 ### 1.1 The Background
 
-With more and more smart IoT edge devices introduced to our daily lives, people who are used to the smart-phone like a graphic user interface (GUI) want to have the same user experience when using those micro-controller-based products. This trend has been long observed and understood by Arm's leading eco-partners. 
+With more and more smart IoT edge devices introduced to our daily lives, people who are used to the smart-phone-like graphic user interfaces (GUIs) want to have the similar modernized user experience even when using microcontroller-based products. This trend has been long observed and understood by Arm's eco-partners. 
 
-As a result, many silicon vendors introduce dedicated hardware accelerators into their microcontroller products to help 2D image processing. Meanwhile, GUI service providers also update their product lines to target micro-controller based graphic user interface applications. Many open-source embedded GUI stacks are hot on GitHub, e.g. [LVGL](https://lvgl.io/). 
+As a result, many silicon vendors introduce dedicated hardware accelerators into their microcontroller products to help 2D image processing. Meanwhile, GUI service providers also update their product lines to target microcontroller based GUI applications. Many open-source embedded GUI stacks are hot on GitHub, e.g. [LVGL](https://lvgl.io/). 
 
-In fact, using GUI with microcontrollers isn't new at all. Still, until the recent rise of IoT and AI, people have found that the simple and monotonous graphical interface in the past is really unbearable. The pursuit of user experience similar to that of a smartphone has become a basic requirement for products. 
+In fact, using GUI with microcontrollers isn't new at all. Still, until the recent rise of IoT and AI, people find that the simple and monotonous GUI is really unbearable. The pursuit of user experience similar to that of a smartphone has become a basic requirement for products. 
 
-On the other hand, seemingly complicated graphical interfaces often only require simple texture paving. Even the so-called transparency effects are not unaffordable for microcontrollers that often run under tens of MHz or even hundreds of MHz. 
+On the other hand, seemingly complicated GUIs are often implemented with simple 2D image-copy and -tiling. Even the translucent effect is not unaffordable for microcontrollers that often run under tens or hundreds of MHz. 
 
-Technologies used for 2D graphics have been matured as early as the era of 8-bit Gaming Console. As 8-bit 6502 can achieve fancy graphics effects, why can't the most advanced Cortex-M processor of the day?
+Technologies used for 2D graphics have been matured as early as the era of 8-bit Gaming Console. Since 8-bit 6502 can achieve fancy graphics effects, why can't the most advanced Cortex-M processor of the day?
 
 **Figure 1-1  2D Technologies used in Super-Mario-Brothers on NES** 
 
@@ -84,7 +89,7 @@ Technologies used for 2D graphics have been matured as early as the era of 8-bit
 
 ### 1.2 The Problems in current solutions
 
-As shown in **Figure 1-2**, the Linux system has a complete ecosystem from GPU drivers to GUI software services. Compared with it, the resource-constrained embedded system is obviously missing a lot in the ecosystem. To make up for this missing link, the concept of Arm-2D was introduced.
+As shown in **Figure 1-2**, Linux based systems have a complete ecosystem that provides GPU drivers and GUI software services. In contrast, resource-constrained embedded systems do not have such luxury. To enhance the MCU ecosystem, Arm-2D is introduced.
 
 **Figure 1-2 Ecosystem Comparison between Rich Embedded and Constraint Embedded System in GUI**
 
@@ -92,9 +97,9 @@ As shown in **Figure 1-2**, the Linux system has a complete ecosystem from GPU d
 
 
 
-When we look at the conventional GUI graphics architecture in today's embedded ecosystem (as shown in **Figure 1-3** ), we will clearly observe 4 layers: the application and design layer, the GUI software service layer, the rendering layer and hardware driver layer. 
+When we look at the traditionally embedded  GUI architecture(as shown in **Figure 1-3** ), there are four layers: 1) the application and designer layer, 2) the GUI software service layer, 3) the rendering layer, and 3) the hardware driver layer. 
 
-**Arm-2D focuses on accelerating the low-level 2D image processing**, and will not touch any part of the GUI software service, so the library will not compete with the GUI service providers in the Arm ecosystem. In fact, because Arm has proposed a unified set of low-level acceleration APIs, **a full ecological level of cooperation can be quickly established** between chip manufacturers that provide hardware accelerators and software providers that provide GUI services. **Everyone can concentrate on their own works**: For example, chip manufacturers can ensure that they receive a wide range of software support by adding drivers for their dedicated 2D accelerators following the Arm-2D standard, and GUI providers only need to build their GUI stack upon Arm-2D APIs; hence a wide range of device support is ensured.
+**Arm-2D focuses on accelerating the low-level 2D image processing**, and will not touch upper layers of the GUI software stacks, hence avoiding competing with GUI service providers in the same ecosystem. In fact, because Arm has proposed an abstraction layer for the low-level 2D image processing, **a whole ecological level of cooperation can be quickly established** between chip manufacturers that provide hardware accelerators and software providers that provide GUI services. **Everyone can concentrate on enlarging their own values**. For example, by adding arm-2d adaptor drivers for their proprietary 2D accelerators silicon vendors can achieve a wide range of support from GUI providers who build/port their GUI stack upon Arm-2D APIs.
 
 **Figure 1-3 The Hierarchy of a Typical Embedded GUI System.**
 
@@ -106,49 +111,54 @@ When we look at the conventional GUI graphics architecture in today's embedded e
 
 **The library is targeting ALL Cortex-M processors with/without various hardware 2D image accelerators:**
 
-- Armv6-M processors: Cortex-M0/M0+/M1
-- Armv7-M processors: Cortex-M3/M4/M7
-- Armv8-M processors: Cortex-M23/M33/M35P
-- Armv8.1-M processors: Cortex-M55
+- Armv6-M processors: Cortex-M0/M0+/M1/SC000
+- Armv7-M processors: Cortex-M3/M4/M7/SC300
+- Armv8-M processors: Cortex-M23/M33/Star-MC1/M35P
+- Armv8.1-M processors: Cortex-M55/M85
 
-**The library is designed with ACI (Arm Custom Instructions) in mind.** Specific accelerations using user-defined instructions could be easily integrated into the library without modifying upper-layer software. 
+**The library is designed with ACI (Arm Custom Instructions) in mind.** Accelerations implemented with user-defined instructions can be integrated into the library easily without modifying the existing Arm-2D library or upper-layer software. 
 
-**The library is designed with various 2D image accelerator in mind.** The Support for those accelerators could be easily added into the library without modifying upper-layer software. 
+**The library is designed with 2D image accelerators in mind and following the feature agnostic principle.**  The Support for accelerators can be added easily without modifying the existing Arm-2D library or upper-layer software. 
 
-**The library is designed with a deep constraint environment in mind.** **For Cortex-M processors with 4K~32K RAM that traditionally cannot afford a full-frame-buffer**, it introduces a feature called **Generic Partial Frame-buffer** which enables those existing MCUs to exchange time for space and have a fancy graphical user interface whilst still have a decent frame-rate. 
+**The library is designed with resource constraints in mind.** **For Cortex-M processors with 4K~32K SRAM that cannot afford a full-frame-buffer**, Arm-2D introduces a feature called **Generic Partial Frame-buffer** enabling those existing MCUs to run GUI applications by practicing time-space exchange schemes while still enjoying a decent frame rate. 
 
 
 
 ### 1.4 Dependency
 
-- The library depends on **CMSIS 5.7.0 and above** (If you want to use Arm-2D with Cortex-M55, you need CMSIS 5.8.0 which you can get from [Github](https://github.com/ARM-software/CMSIS_5)). 
+- The library depends on **CMSIS 5.7.0 and above** (If you want to use Arm-2D with Cortex-M55, CMSIS 5.8.0 is required). 
 - The library is developed with the **C11** standard and depends on some **widely adopted GCC extensions**.
   - See **section 3.2** for details.
-- The library should be compiled with **Arm Compiler 5**, **Arm Compiler 6**, **GCC**, **LLVM** and **IAR**
+- The library supports **Arm Compiler 5**, **Arm Compiler 6**, **GCC**, **LLVM** and **IAR**
   - See **section 5** for details. 
 
 
 
-### 1.5 Examples and Benchmark
+### 1.5 Examples, Benchmark and Templates
 
-#### 1.5.1 Example Summary
+#### 1.5.1 Summary
 
-| Example              | Description                                                  | Folder                         | Note               |
-| -------------------- | ------------------------------------------------------------ | ------------------------------ | ------------------ |
-| Alpha-Blending       | It is an **ALL-IN-ONE** (except rotation) example that demonstrates almost all the features provided by the library. | examples/alpha_blending        | Used as benchmark. |
-| Partial-Frame-buffer | **It delivers the same visual effects as Alpha-blending example but using Partial-Frame-buffer**. It can be used as a template or reference code for programmers who want to implement a graphical user interface on an MCU with small RAM. In this example, **16*16 FPB (512Bytes) is used, and the total system RAM usage is less than 2.5KByte** (including stack, heap and FPB). | examples/partial_frame_buffer. |                    |
-| watch_panel          | It is a dedicated example for smart-watch like panel. For current version, it is only used to demonstrate rotation algorithms with two spinning gears. Each gear rotates at a different angular velocity and both Colour-masking and alpha-masking schemes are applied. | examples/watch_panel           | Used as benchmark  |
+| Projects                           | Description                                                  | Folder                                      | Note                        |
+| ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------- | --------------------------- |
+| benchmark                          | It is an **ALL-IN-ONE** example that demonstrates almost all features provided by Arm-2D. By setting different PFB sizes, you can evaluate the 2D image processing capability for the target system. | examples/benchmark                          | Can be used as a benchmark. |
+| watch_panel                        | It is a dedicated example of a smart-watch-like panel. A pointer and two gears rotate at different angular velocities on a translucent watch panel with a dynamic background. | examples/watch_panel                        | Can be used as a benchmark  |
+| \[template\]\[bare-metal\]\[pfb\]  | It is a project template for the bare-metal environment.     | examples/\[template\]\[bare-metal\]\[pfb\]  | Project Template            |
+| \[template\]\[cmsis-rtos2\]\[pfb\] | It is a project template for the RTOS environment, which use CMSIS-RTO2 as an example to show how Arm-2D can work with an RTOS. | examples/\[template\]\[cmsis-rtos2\]\[pfb\] | Project Template            |
 
 
 
 #### 1.5.2 Benchmark
 
-Since there is no public benchmark available for micro-controllers, we decide to overcome this problem with the following methods and considerations:
+There is no public 2D image processing benchmark available for microcontrollers. To facilitate the library development and optimization,  we overcome this problem with following methods:
 
 - **Choose the widely used algorithms in embedded GUI as the body of the benchmark**
   - Alpha-blending
+  - Colour-Keying
   - Image Copy
   - Texture Paving
+  - Rotation
+  - Mirroring
+  - Masking
 - **Simulate a typical application scenario with sufficient complexity**
   - Background with Texture paving (switching different mirroring modes every 4 second)
   - Foreground picture 
@@ -161,9 +171,9 @@ Since there is no public benchmark available for micro-controllers, we decide to
 
 
 
-**Figure 1-4 A snapshot of alpha-blending demo running on MPS3 platform**
+**Figure 1-4 A snapshot of benchmark running on Cortex-M4 FVP platform**
 
-![Alpha-blending](./documents/pictures/Alpha-blending.gif) 
+![Alpha-blending](./documents/pictures/benchmark)  
 
 
 
@@ -175,20 +185,22 @@ Since there is no public benchmark available for micro-controllers, we decide to
 
 **Figure 1-5 Performance Comparison among some Cortex-M processors**
 
-![image-20210318225839820](./documents/pictures/TopReadme_1_6_2_b.png) 
+![](./documents/pictures/TopReadme_1_6_2_b.png) 
 
 
 
 ## 2 Folder Hierarchy
 
-| Folder and File                  | Type   | Description                                                  |
-| :------------------------------- | ------ | ------------------------------------------------------------ |
-| Library                          | Folder | This folder contains the source files and header files of the library. |
-| Documents                        | Folder | This folder contains all the documents.                      |
-| Examples                         | Folder | This folder contains all the example projects.               |
-| README                           | .md    | The README.md you are currently reading.                     |
-| how_to_deploy_the_arm_2d_library | .md    | A step by step guidance helping you to deploy the Arm-2D library to your projects. |
-| LICENSE                          |        | The Apache 2.0 License                                       |
+| Folder and File                  | Type    | Description                                                  |
+| :------------------------------- | ------- | ------------------------------------------------------------ |
+| Library                          | Folder  | This folder contains the source files and header files of the library. |
+| Documents                        | Folder  | This folder contains all the documents.                      |
+| Examples                         | Folder  | This folder contains all the example projects.               |
+| README                           | .md     | The README.md you are currently reading.                     |
+| how_to_deploy_the_arm_2d_library | .md     | A step by step guidance helping you to deploy the Arm-2D library to your projects. |
+| LICENSE                          | License | The Apache 2.0 License                                       |
+| tools                            | Folder  | This folder contains some useful utilities for using the library. For example, img2c.py is a python script that convert a specified picture into the tile data structure. |
+| cmsis-pack                       | Folder  | This folder contains the pdsc file and pre-compiled CMSIS-Packs. |
 
 
 
@@ -201,104 +213,23 @@ Since there is no public benchmark available for micro-controllers, we decide to
 
 **Figure 3-1 Private and Public Files** 
 
-![image-20210317181453270](./documents/pictures/TopReadme_3_1.png) 
+![](./documents/pictures/TopReadme_3_1.png) 
 
 - Any symbol, e.g. file name, function name, macro name, type name etc., having a double under-scope as the prefix is considered as **PRIVATE** to the library. You should save your time from touching them. 
 
 - The library is designed with the philosophy that Users are free to use anything in public header files and should not touch anything marked implicitly or explicitly as private. 
 
-- Despite which processor you use, during the compilation, all C source files are safe to be added to the compilation (and we highly recommend you to do this for simplicity reason). For example, when you use Cortex-M4, which doesn't support Helium extension (introduced by Armv8.1-M architecture and first implemented by the Cortex-M55 processor), it is OK to include "***arm_2d_helium.c***" in the compilation process, as the C source files are constructed with environment detection pre-processing mechanisms. 
+- Despite which processor you use, during the compilation, all C source files are safe to be added to the compilation (and we highly recommend you to do this for simplicity reason). For example, when you use Cortex-M4, which doesn't support Helium extension (introduced by Armv8.1-M architecture and first implemented by the Cortex-M55 processor), it is OK to include "***arm_2d_helium.c***" in the compilation process, as the C source files are constructed with environment detection in pre-processing phase. 
 
-- In your application, only including "***arm_2d.h***" is sufficient to get all the services and APIs ready for you. 
+- In your application, including "***arm_2d.h***" is sufficient to get all the services and APIs ready for you. 
 
-- Make sure that the library is initialised by calling **arm_2d_init()** before using any of the services. 
+- Make sure that the library is initialised by calling `arm_2d_init()` before using any of the services. 
 
   **NOTE**: 
 
-  1. ***arm_2d_init()*** is a function-like macro that initialises different parts of the library depending on the feature configuration macros.  
-  2. Feature configuration macros are checked by "***arm_2d_feature.h***". For the current stage of the library, please **DO NOT** override those feature configuration macros.
-
-```c
-#undef __ARM_2D_HAS_HELIUM__
-#undef __ARM_2D_HAS_HELIUM_INTEGER__
-#undef __ARM_2D_HAS_HELIUM_FLOAT__
-
-#if defined(__ARM_FEATURE_MVE) && __ARM_FEATURE_MVE
-#   define __ARM_2D_HAS_HELIUM__                        1
-#   define __ARM_2D_HAS_HELIUM_INTEGER__                1
-#   if (__ARM_FEATURE_MVE & 2)
-#       define __ARM_2D_HAS_HELIUM_FLOAT__              1
-#   else
-#       define __ARM_2D_HAS_HELIUM_FLOAT__              0
-#   endif
-#else
-#   define __ARM_2D_HAS_HELIUM__                        0
-#   define __ARM_2D_HAS_HELIUM_INTEGER__                0
-#   define __ARM_2D_HAS_HELIUM_FLOAT__                  0
-#endif
-
-#ifndef __ARM_2D_HAS_CDE__
-#   define __ARM_2D_HAS_CDE__                           0
-#endif
-
-#ifndef __ARM_2D_HAS_HW_ACC__
-#   define __ARM_2D_HAS_HW_ACC__                        0
-#endif
-#if defined(__ARM_2D_HAS_HW_ACC__) && __ARM_2D_HAS_HW_ACC__
-#   if defined(__ARM_2D_HAS_ASYNC__) && !__ARM_2D_HAS_ASYNC__
-#       warning As long as __ARM_2D_HAS_HW_ACC__ is set to 1,\
- __ARM_2D_HAS_ASYNC__ is forced to 1. Since you set __ARM_2D_HAS_ASYNC__ to\
- 0, please remove your macro definition for __ARM_2D_HAS_ASYNC__ to avoid this\
- warning.
-#   endif
-#   undef __ARM_2D_HAS_ASYNC__
-#   define __ARM_2D_HAS_ASYNC__                         1
-#endif
-
-#ifndef __ARM_2D_HAS_ASYNC__
-#   define __ARM_2D_HAS_ASYNC__                         1
-#endif
-#if defined(__ARM_2D_HAS_ASYNC__) &&  __ARM_2D_HAS_ASYNC__
-#   if  !defined(__ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE) ||                        \
-        __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE < 4
-#       define __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE      4
-#   endif
-#endif
-
-...
-
-/*============================ MACROFIED FUNCTIONS ===========================*/
-
-#if defined(__ARM_2D_HAS_CDE__) && !__ARM_2D_HAS_CDE__
-#   define __arm_2d_cde_init()
-#endif
-
-#if defined(__ARM_2D_HAS_HELIUM__) && !__ARM_2D_HAS_HELIUM__
-#   define __arm_2d_helium_init()
-#endif
-
-#if defined(__ARM_2D_HAS_HW_ACC__) && !__ARM_2D_HAS_HW_ACC__
-#   define __arm_2d_acc_init()
-#endif
-
-#if defined(__ARM_2D_HAS_ASYNC__) && !__ARM_2D_HAS_ASYNC__
-#   define __arm_2d_async_init()
-#endif
-
-
-#undef arm_2d_init
-#define arm_2d_init()                                                           \
-        do {                                                                    \
-            __arm_2d_init();                                                    \
-            __arm_2d_async_init();                                              \
-            __arm_2d_helium_init();                                             \
-            __arm_2d_cde_init();                                                \
-            __arm_2d_acc_init();                                                \
-        } while(0)
-...
-```
-
-
+  1. Feature configuration macros are checked by "***arm_2d_feature.h***". For the current stage of the library, please **DO NOT** override those feature configuration macros.
+  
+  
 
 ### 3.2 "I am interested in the implementation"
 
@@ -310,12 +241,13 @@ Since there is no public benchmark available for micro-controllers, we decide to
   - What's the structure of the design in details
 - Some design considerations:
   - The library supports **Arm Compiler 5/6**, **GCC**, **LLVM** and **IAR**.
-  - The library supports **ALL** Cortex-M processors. There should be no problem for working with existing Cortex-M processors, i.e. **Cortex-M0/M0+/M1/M3/M4/M7/M23/M33/M35P/M55**. If you find any issue, please feel free to let us know. 
+  - The library supports **ALL** Cortex-M processors. There should be no problem for working with existing Cortex-M processors, i.e. **Cortex-M0/M0+/M1/M3/M4/M7/M23/M33/Star-MC1/M35P/M55/M85**. If you find any issue, please feel free to let us know. 
   - The library is designed with some **OOPC** (Object-Oriented Programming with ANSI-C) methodologies. And the bottom line is that any methods and tricks adopted in this library should come with no or very little cost. 
 - This library is compliant with **C11** standard and uses some **widely accepted GCC extensions**:
   - [Macros with a Variable Number of Arguments](https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html#Variadic-Macros) 
   - [ ***\_\_alignof\_\_()*** ](https://gcc.gnu.org/onlinedocs/gcc/Alignment.html#Alignment) 
   - [Unnamed Structure and Union Fields](https://gcc.gnu.org/onlinedocs/gcc/Unnamed-Fields.html)
+  - [Statements and Declarations in Expressions](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html#Statement-Exprs)
 - Some of the definitions are written with the support of the **Microsoft Extensions** in mind \( ***-fms-extensions*** \), but **the library never depends on it**. This means that if programmers enable the support of the Microsoft Extensions in their project, they can benefit from it. 
 - This library follows "***Using Extensions to replace Modifications***" principle
   - Keywords ***\_\_WEAK*** and ***\_\_OVERRIDE\_WEAK*** are introduced for default functions and extensions; it is similar to the concept of "virtual functions" and "override functions" in C#. 
@@ -470,23 +402,20 @@ def_low_lv_io(__ARM_2D_IO_ROTATE_RGB888,
   - LLVM
   - IAR
 - The library focus on **Low Level Pixel Processing Acceleration**
-  - In principle, the library will **NOT** provide APIs for content creation, such as drawing shapes, text display etc., but simple point drawing APIs.
+  - In principle, the library will **NOT** provide APIs for content creation, such as drawing shapes, text display etc., but simple point drawing and colour-filling APIs .
   - In principle, the library will **NOT** provide data structures or related algorithms essential for creating a GUI, for example, element tree, GUI message handling and the tree traversal algorithms.
 
 
 
 ### 5.2 The Temporary Limitations
 
-- The library currently is developed and validated using Arm Compiler 6, Arm Compiler 5 and GCC.
 - The library currently can only be used in the C environment. C++ support will be added later.
-- The library currently only supports two specific colours, i.e. **RGB565** and **RGB888**
-- Anti-aliasing algorithms haven't been implemented yet.
-- Zooming (Stretching) algorithms haven't been implemented yet.
-- Alpha-masking algorithms haven't been implemented yet.
+- The GCC support for Cortex-M55 (helium acceleration) is broken (waiting for tool-chain update). 
+- Generic Anti-aliasing algorithms haven't been introduced, but anti-alias in transform (i.e. rotation and scaling) is supported.
 - The library currently only provides default software algorithms and a **[Helium](https://developer.arm.com/architectures/instruction-sets/simd-isas/helium) based acceleration library**. 
   - Although planned, no hardware acceleration is implemented or supported for now.
   - Although planned and implemented, the [ACI (Arm Custom Instruction)](https://developer.arm.com/architectures/instruction-sets/custom-instructions) acceleration solutions are not open-source for now. Please contact local Arm FAE for details. 
-- The provided example projects only run on [MPS2](https://developer.arm.com/tools-and-software/development-boards/fpga-prototyping-boards/mps2), [MPS3](https://developer.arm.com/tools-and-software/development-boards/fpga-prototyping-boards/mps3), [FVP](https://developer.arm.com/tools-and-software/open-source-software/arm-platforms-software/cortex-m-platforms-software) and some 3rd party development platforms, e.g. STM32F746G-Discovery. 
+- The provided example projects only run on [MPS2](https://developer.arm.com/tools-and-software/development-boards/fpga-prototyping-boards/mps2), [MPS3](https://developer.arm.com/tools-and-software/development-boards/fpga-prototyping-boards/mps3), [FVP](https://developer.arm.com/tools-and-software/open-source-software/arm-platforms-software/cortex-m-platforms-software) and some 3rd party development platforms, e.g. **STM32F746G-Discovery** and **Raspberry Pi Pico**. 
   - Feel free to try the library on your own devices. The library depends on No specific peripheral. 
 - Example projects are based on MDK (one of the most popular development environments for Cortex-M processors ).
 
@@ -514,3 +443,5 @@ If you want to spend some time to try the library and leave some thoughts, pleas
 Thank you for your time.
 
 ***Arm-2D Development Team.***
+
+20-May-2022

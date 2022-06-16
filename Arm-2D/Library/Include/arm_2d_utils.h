@@ -1,11 +1,5 @@
-/******************************************************************************
- * @file     arm_2d_utils.h
- * @brief    Public header file for Arm-2D Library
- * @version  V0.5.0
- * @date     01. December 2020
- ******************************************************************************/
 /*
- * Copyright (c) 2010-2020 Arm Limited or its affiliates. All rights reserved.
+ * Copyright (C) 2010-2022 Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,6 +16,16 @@
  * limitations under the License.
  */
 
+/* ----------------------------------------------------------------------
+ * Project:      Arm-2D Library
+ * Title:        arm_2d_utils.h
+ * Description:  Public header file for Arm-2D Library
+ *
+ * $Date:        12. April 2022
+ * $Revision:    V.1.0.1
+ *
+ * -------------------------------------------------------------------- */
+
 #ifndef __ARM_2D_UTILS_H__
 #define __ARM_2D_UTILS_H__
 
@@ -29,10 +33,13 @@
 
 #if defined(__clang__)
 #   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
 #   pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #   pragma clang diagnostic ignored "-Wpadded"
 #   pragma clang diagnostic ignored "-Wsign-conversion"
 #   pragma clang diagnostic ignored "-Wimplicit-int-conversion"
+#   pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
 #   pragma clang diagnostic ignored "-Wundef"
 #elif defined(__IS_COMPILER_GCC__)
 #   pragma GCC diagnostic push
@@ -47,7 +54,6 @@
 /*! \note arm-2d relies on CMSIS 5.4.0 and above.
  */
 #include "cmsis_compiler.h"
-#include <arm_math.h>
 
 #ifdef   __cplusplus
 extern "C" {
@@ -148,7 +154,7 @@ extern "C" {
  *----------------------------------------------------------------------------*/
 
 #ifndef ARM_2D_UNUSED
-#   define ARM_2D_UNUSED(__VAR)     (__VAR) = (__VAR)
+#   define ARM_2D_UNUSED(__VAR)     (void)(__VAR)
 #endif
 
 #ifndef ARM_TEST_BITS
@@ -159,13 +165,29 @@ extern "C" {
 #   define dimof(__array)          (sizeof(__array)/sizeof(__array[0]))
 #endif
 
-#define __ARM_VA_NUM_ARGS_IMPL(   _0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,    \
-                                    _13,_14,_15,_16,__N,...)      __N
+#ifndef offsetof
+#   define offsetof(__type, __member)                                           \
+            ((uintptr_t)&(((__type *)NULL)->__member))
+#endif
+
+#define __ARM_TO_STRING(__STR)          #__STR
+#define ARM_TO_STRING(__STR)            __ARM_TO_STRING(__STR)
+
+#define __ARM_VA_NUM_ARGS_IMPL( _0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,      \
+                                _13,_14,_15,_16,__N,...)      __N
 #define __ARM_VA_NUM_ARGS(...)                                                  \
             __ARM_VA_NUM_ARGS_IMPL( 0,##__VA_ARGS__,16,15,14,13,12,11,10,9,     \
                                       8,7,6,5,4,3,2,1,0)
 
+/*! \brief detect whether GNU extension is enabled in compilation or not
+ */
+#if __ARM_VA_NUM_ARGS() != 0
+#   warning Please enable GNC extensions, it is required by the Arm-2D.
+#endif
+
+
 #define __ARM_CONNECT2(__A, __B)                        __A##__B
+#define __ARM_CONNECT2_ALT(__A, __B)                    __A##__B
 #define __ARM_CONNECT3(__A, __B, __C)                   __A##__B##__C
 #define __ARM_CONNECT4(__A, __B, __C, __D)              __A##__B##__C##__D
 #define __ARM_CONNECT5(__A, __B, __C, __D, __E)         __A##__B##__C##__D##__E
@@ -179,6 +201,7 @@ extern "C" {
                                     __A##__B##__C##__D##__E##__F##__G##__H##__I
 
 #define ARM_CONNECT2(__A, __B)                  __ARM_CONNECT2(__A, __B)
+#define ARM_CONNECT2_ALT(__A, __B)              __ARM_CONNECT2_ALT(__A, __B)
 #define ARM_CONNECT3(__A, __B, __C)             __ARM_CONNECT3(__A, __B, __C)
 #define ARM_CONNECT4(__A, __B, __C, __D)        __ARM_CONNECT4(__A, __B, __C, __D)
 #define ARM_CONNECT5(__A, __B, __C, __D, __E)                                   \
@@ -193,9 +216,10 @@ extern "C" {
                 __ARM_CONNECT9(__A, __B, __C, __D, __E, __F, __G, __H, __I)
 
 #define arm_connect(...)                                                        \
-            ARM_CONNECT2(ARM_CONNECT, __ARM_VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
+            ARM_CONNECT2_ALT(ARM_CONNECT, __ARM_VA_NUM_ARGS(__VA_ARGS__))       \
+                (__VA_ARGS__)
 
-
+#define ARM_CONNECT(...)        arm_connect(__VA_ARGS__)
 
 #define __ARM_USING1(__declare)                                                 \
             for (__declare, *ARM_CONNECT3(__ARM_USING_, __LINE__,_ptr) = NULL;  \
@@ -272,13 +296,13 @@ extern "C" {
 
 #ifndef ARM_NOINIT
 #   if     defined(__IS_COMPILER_ARM_COMPILER_5__)
-#       define ARM_NOINIT       __attribute__(( section( ".bss.noinit"),zero_init))
+#       define ARM_NOINIT   __attribute__(( section( ".bss.noinit"),zero_init))
 #   elif   defined(__IS_COMPILER_ARM_COMPILER_6__)
-#       define ARM_NOINIT       __attribute__(( section( ".bss.noinit")))
+#       define ARM_NOINIT   __attribute__(( section( ".bss.noinit")))
 #   elif   defined(__IS_COMPILER_IAR__)
-#       define ARM_NOINIT       __no_init
+#       define ARM_NOINIT   __no_init
 #   elif   defined(__IS_COMPILER_GCC__) || defined(__IS_COMPILER_LLVM__)
-#       define ARM_NOINIT       __attribute__(( section( ".bss.noinit")))
+#       define ARM_NOINIT   __attribute__(( section( ".bss.noinit")))
 #   else
 #       define ARM_NOINIT
 #   endif
@@ -287,7 +311,7 @@ extern "C" {
 
 #ifndef ARM_ALIGN
 #   define __ARM_ALIGN(__N)        __attribute__((aligned(__N)))
-#   define ARM_ALIGN(__N)          __ARM_ALIGN(__N) 
+#   define ARM_ALIGN(__N)          __ARM_ALIGN(__N)
 #endif
 
 
@@ -296,18 +320,35 @@ extern "C" {
 #endif
 
 #ifndef __OVERRIDE_WEAK
-#   define __OVERRIDE_WEAK          __USED
+#   define __OVERRIDE_WEAK
 #endif
 
+#define ARM_2D_SAFE_NAME(...)    ARM_CONNECT(__,__LINE__,##__VA_ARGS__)
+#define arm_2d_safe_name(...)    ARM_2D_SAFE_NAME(__VA_ARGS__)
 
 #undef arm_irq_safe
 
 #define arm_irq_safe                                                            \
-            arm_using(  uint32_t ARM_CONNECT2(temp,__LINE__) =                  \
+            arm_using(  uint32_t ARM_2D_SAFE_NAME(temp) =                       \
                         ({uint32_t temp=__get_PRIMASK();__disable_irq();temp;}),\
-                        __set_PRIMASK(ARM_CONNECT2(temp,__LINE__)))
+                        __set_PRIMASK(ARM_2D_SAFE_NAME(temp)))
 
 
+#undef ARM_2D_WRAP_FUNC
+#undef __ARM_2D_WRAP_FUNC
+#undef ARM_2D_ORIG_FUNC
+#undef __ARM_2D_ORIG_FUNC
+
+#if defined(__IS_COMPILER_ARM_COMPILER_6__)
+#   define __ARM_2D_WRAP_FUNC(__FUNC)           $Sub$$##__FUNC
+#   define __ARM_2D_ORIG_FUNC(__FUNC)           $Super$$## __FUNC
+#else
+#   define __ARM_2D_WRAP_FUNC(x) __wrap_ ## x
+#   define __ARM_2D_ORIG_FUNC(x) __real_ ## x
+#endif
+
+#define ARM_2D_WRAP_FUNC(__FUNC)                __ARM_2D_WRAP_FUNC(__FUNC)
+#define ARM_2D_ORIG_FUNC(__FUNC)                __ARM_2D_ORIG_FUNC(__FUNC)
 
 /*----------------------------------------------------------------------------*
  * List Operations                                                            *
@@ -339,7 +380,8 @@ extern "C" {
                 ((__arm_slist_node_t *)(__P_NODE))->ptNext = NULL;              \
             }                                                                   \
         } while(0)
-#define ARM_LIST_STACK_POP(__P_TOP, __P_NODE)    __ARM_LIST_STACK_POP((__P_TOP), (__P_NODE))
+#define ARM_LIST_STACK_POP(__P_TOP, __P_NODE)                                   \
+            __ARM_LIST_STACK_POP((__P_TOP), (__P_NODE))
 #define ARM_LIST_REMOVE_AFTER(__P_TARGET, __P_NODE)                             \
             ARM_LIST_STACK_POP((__P_TARGET), (__P_NODE))
 

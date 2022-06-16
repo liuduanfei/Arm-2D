@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2021 Arm Limited or its affiliates. All rights reserved.
+ * Copyright (C) 2010-2022 Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,8 +21,8 @@
  * Title:        arm-2d_async.c
  * Description:  Pixel pipeline extensions for support hardware acceleration.
  *
- * $Date:        29. April 2021
- * $Revision:    V.0.8.0
+ * $Date:        31. May 2022
+ * $Revision:    V.1.0.2
  *
  * Target Processor:  Cortex-M cores
  *
@@ -42,7 +42,8 @@ extern "C" {
 #if defined(__ARM_2D_HAS_ASYNC__) && __ARM_2D_HAS_ASYNC__
 
 #if defined(__clang__)
-#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
 #   pragma clang diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
 #   pragma clang diagnostic ignored "-Wcast-qual"
 #   pragma clang diagnostic ignored "-Wcast-align"
@@ -62,10 +63,12 @@ extern "C" {
 #   pragma clang diagnostic ignored "-Wswitch"
 #   pragma clang diagnostic ignored "-Wimplicit-fallthrough"
 #   pragma clang diagnostic ignored "-Wgnu-statement-expression"
+#   pragma clang diagnostic ignored "-Wdeclaration-after-statement"
 #elif defined(__IS_COMPILER_ARM_COMPILER_5__)
 #   pragma diag_suppress 174,177,188,68,513,144
+#elif defined(__IS_COMPILER_IAR__)
+#   pragma diag_suppress=Pa089,Pe188
 #elif defined(__IS_COMPILER_GCC__)
-#   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wswitch"
 #   pragma GCC diagnostic ignored "-Wenum-compare"
 #   pragma GCC diagnostic ignored "-Wpedantic"
@@ -73,16 +76,6 @@ extern "C" {
 #endif
 
 /*============================ MACROS ========================================*/
-#ifndef __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE
-#   define __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE        4
-#endif
-#if __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE < 4
-#   warning The __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE should be larger than or\
- equal to 3, set it to the default value 4.
-#   undef __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE
-#   define __ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE    4
-#endif
-
 /*============================ MACROFIED FUNCTIONS ===========================*/
 /*============================ TYPES =========================================*/
 /*============================ GLOBAL VARIABLES ==============================*/
@@ -546,20 +539,17 @@ arm_fsm_rt_t __arm_2d_frontend_task(arm_2d_task_t *ptThis)
     return arm_fsm_rt_on_going;
 }
 
-
- /*! \brief arm-2d pixel pipeline task entery
-  *! \note  This function is *TRHEAD-SAFE*
-  *! \param none
-  *! \retval arm_fsm_rt_cpl The sub-task FIFO is empty, the caller, i.e. the host
-  *!            RTOS thread can block itself by waiting for a semaphore which is
-  *!            set by arm_2d_notif_sub_task_fifo_task_arrive()
-  *! \retval arm_fsm_rt_on_going The arm_2d_task issued one sub-task without 
-  *!            problem and it yields. 
-  *! \retval arm_fsm_rt_async You shouldn't see this value
-  *! \retval arm_fsm_rt_wait_for_obj some algorithm or hardware accelerator wants
-  *!            to sync-up with applications.
-  *! \retval (<0) Serious error is detected.
-  */
+/*! 
+ * \brief arm-2d pixel pipeline task entery
+ * \note  This function is *TRHEAD-SAFE*
+ * \param ptTask the address of an arm-2d task control block
+ * \retval arm_fsm_rt_cpl The sub-task FIFO is empty, the caller can wait for a 
+ *         semaphore set by arm_2d_notif_sub_task_fifo_task_arrive()
+ * \retval arm_fsm_rt_on_going The arm_2d_task yields 
+ * \retval arm_fsm_rt_async You shouldn't see this value
+ * \retval arm_fsm_rt_wait_for_obj hardware accelerator wants to sync-up with applications.
+ * \retval (<0) Serious error is detected.
+ */
 arm_fsm_rt_t arm_2d_task(arm_2d_task_t *ptThis)
 {
     arm_fsm_rt_t tResult;
@@ -674,7 +664,7 @@ arm_fsm_rt_t __arm_2d_issue_sub_task_tile_process(
 
     (*ptTask) = (__arm_2d_sub_task_t) {
                     .ptOP = &(ptThis->use_as__arm_2d_op_core_t),
-                    .chLowLeveIOIndex = 0,//OP_CORE.ptOp->Info.LowLevelInterfaceIndex.TileProcessLike,
+                    .chLowLeveIOIndex = 0,
                     .Param.tTileProcess = *ptParam,
                 };
     
@@ -711,6 +701,49 @@ arm_fsm_rt_t __arm_2d_issue_sub_task_fill(
 }
 
 __OVERRIDE_WEAK
+arm_fsm_rt_t __arm_2d_issue_sub_task_fill_with_mask(
+                                    arm_2d_op_cp_t *ptThis,
+                                    __arm_2d_tile_param_t *ptSource,
+                                    __arm_2d_tile_param_t *ptSourceMask,
+                                    __arm_2d_tile_param_t *ptTarget,
+                                    __arm_2d_tile_param_t *ptTargetMask)
+{
+    __arm_2d_sub_task_t *ptTask = __arm_2d_sub_task_new();
+    assert(NULL != ptTask);         
+
+    (*ptTask) = (__arm_2d_sub_task_t) {
+                    .ptOP = &(ptThis->use_as__arm_2d_op_core_t),
+                    .chLowLeveIOIndex = 1,
+                    .Param.tFillMask = {
+                        .use_as____arm_2d_param_fill_t = {
+                            .tSource        = *ptSource,
+                            .tTarget        = *ptTarget,
+                        },
+                    },
+                };
+    
+    if (NULL == ptSourceMask){
+        ptTask->Param.tFillMask.tSrcMask.bInvalid = true;
+    } else {
+        ptTask->Param.tFillMask.tSrcMask = *ptSourceMask;
+    }
+    
+    if (NULL == ptTargetMask){
+        ptTask->Param.tFillMask.tDesMask.bInvalid = true;
+    } else {
+        ptTask->Param.tFillMask.tDesMask = *ptTargetMask;
+    }
+    
+    OP_CORE.Status.u4SubTaskCount++;
+    
+    __arm_2d_sub_task_add(ptTask);
+
+    return arm_fsm_rt_async;
+}
+
+
+
+__OVERRIDE_WEAK
 arm_fsm_rt_t __arm_2d_issue_sub_task_copy(
                                     arm_2d_op_cp_t *ptThis,
                                     __arm_2d_tile_param_t *ptSource,
@@ -729,6 +762,50 @@ arm_fsm_rt_t __arm_2d_issue_sub_task_copy(
                         .tCopySize          = *ptCopySize,
                     },
                 };
+    OP_CORE.Status.u4SubTaskCount++;
+    
+    __arm_2d_sub_task_add(ptTask);
+
+    return arm_fsm_rt_async;
+}
+
+__OVERRIDE_WEAK
+arm_fsm_rt_t __arm_2d_issue_sub_task_copy_with_mask(
+                                    arm_2d_op_cp_t *ptThis,
+                                    __arm_2d_tile_param_t *ptSource,
+                                    __arm_2d_tile_param_t *ptSourceMask,
+                                    __arm_2d_tile_param_t *ptTarget,
+                                    __arm_2d_tile_param_t *ptTargetMask,
+                                    arm_2d_size_t * __RESTRICT ptCopySize)
+{
+
+    __arm_2d_sub_task_t *ptTask = __arm_2d_sub_task_new();
+    assert(NULL != ptTask);         
+
+    (*ptTask) = (__arm_2d_sub_task_t) {
+                    .ptOP = &(ptThis->use_as__arm_2d_op_core_t),
+                    .chLowLeveIOIndex = 0,
+                    .Param.tCopyMask = {
+                        .use_as____arm_2d_param_copy_t = {
+                            .tSource        = *ptSource,
+                            .tTarget        = *ptTarget,
+                            .tCopySize      = *ptCopySize,
+                        },
+                    },
+                };
+    
+    if (NULL == ptSourceMask){
+        ptTask->Param.tCopyMask.tSrcMask.bInvalid = true;
+    } else {
+        ptTask->Param.tCopyMask.tSrcMask = *ptSourceMask;
+    }
+    
+    if (NULL == ptTargetMask){
+        ptTask->Param.tCopyMask.tDesMask.bInvalid = true;
+    } else {
+        ptTask->Param.tCopyMask.tDesMask = *ptTargetMask;
+    }
+    
     OP_CORE.Status.u4SubTaskCount++;
     
     __arm_2d_sub_task_add(ptTask);
@@ -797,24 +874,65 @@ arm_fsm_rt_t __arm_2d_issue_sub_task_copy_origin(
 }
 
 
+__OVERRIDE_WEAK
+arm_fsm_rt_t __arm_2d_issue_sub_task_copy_origin_masks(
+                                        arm_2d_op_cp_t *ptThis,
+                                        __arm_2d_tile_param_t *ptSource,
+                                        __arm_2d_tile_param_t *ptOrigin,
+                                        __arm_2d_tile_param_t *ptOriginMask,
+                                        __arm_2d_tile_param_t *ptTarget,
+                                        __arm_2d_tile_param_t *ptTargetMask,
+                                        arm_2d_size_t * __RESTRICT ptCopySize)
+{
+    __arm_2d_sub_task_t *ptTask = __arm_2d_sub_task_new();
+    assert(NULL != ptTask);         
+
+    (*ptTask) = (__arm_2d_sub_task_t) {
+                    .ptOP = &(ptThis->use_as__arm_2d_op_core_t),
+                    .chLowLeveIOIndex = 0,
+                    .Param.tCopyOrigMask = {
+                        .use_as____arm_2d_param_copy_orig_t = {
+                            .use_as____arm_2d_param_copy_t = {
+                                .tSource        = *ptSource,
+                                .tTarget        = *ptTarget,
+                                .tCopySize      = *ptCopySize,
+                            },
+                            
+                            .tOrigin        = *ptOrigin,
+                        },
+                        .tOrigMask = *ptOriginMask,
+                        .tDesMask  = *ptTargetMask,
+                    },
+                };
+    OP_CORE.Status.u4SubTaskCount++;
+    
+    __arm_2d_sub_task_add(ptTask);
+
+    return arm_fsm_rt_async;
+}
 
 
-/*! \brief initialise the whole arm-2d service
- *! \param none
- *! \return none
+
+/*! 
+ * \brief initialise the arm-2d pipeline
+ * \param ptSubTasks an array of __arm_2d_sub_task_t objects
+ * \param hwCount the number of items in the array
+ * \return arm_2d_err_t error code
  */
-void __arm_2d_async_init(void)
+arm_2d_err_t __arm_2d_async_init(   __arm_2d_sub_task_t *ptSubTasks, 
+                                    uint_fast16_t hwCount)
 {   
+
+    if ((NULL == ptSubTasks) || (0 == hwCount )) {
+        return ARM_2D_ERR_INSUFFICIENT_RESOURCE;
+    }
+    
     //! initialise sub task pool
     do {
-        static __arm_2d_sub_task_t 
-            s_tDefaultTaskPool[__ARM_2D_DEFAULT_SUB_TASK_POOL_SIZE];
-        
-        arm_foreach(__arm_2d_sub_task_t, s_tDefaultTaskPool) {
-            __arm_2d_sub_task_free(_);
-        }
-        
-    } while(0);
+        __arm_2d_sub_task_free(ptSubTasks++);
+    } while(--hwCount);
+    
+    return ARM_2D_ERR_NONE;
 }
 
 
@@ -825,9 +943,10 @@ bool arm_2d_port_wait_for_async(uintptr_t pUserParam)
 }
 
 __OVERRIDE_WEAK
-/*! \brief sync up with operation 
- *! \retval true operation is busy
- *! \retval false operation isn't busy
+/*! 
+ * \brief wait asynchronouse operation complete
+ * \retval true sync up with operation
+ * \retval false operation is busy
  */
 bool arm_2d_op_wait_async(arm_2d_op_core_t *ptOP)
 {
@@ -889,16 +1008,6 @@ bool __arm_2d_op_acquire(arm_2d_op_core_t *ptOP)
     
     return !bResult;
 }
-
-
-
-#if defined(__clang__)
-#   pragma clang diagnostic pop
-#elif defined(__IS_COMPILER_ARM_COMPILER_5__)
-#   pragma diag_warning 174,177,188,68,513,144
-#elif defined(__IS_COMPILER_GCC__)
-#   pragma GCC diagnostic pop
-#endif
 
 #ifdef   __cplusplus
 }

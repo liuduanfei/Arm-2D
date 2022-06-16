@@ -36,6 +36,8 @@
 
 #if defined(__clang__)
 #   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-warning-option"
+#   pragma clang diagnostic ignored "-Wreserved-identifier"
 #   pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #   pragma clang diagnostic ignored "-Wpadded"
 #   pragma clang diagnostic ignored "-Wsign-conversion"
@@ -46,13 +48,11 @@
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
-/*! \note arm-2d relies on CMSIS 5.8.0 and above.
- */
-#include <arm_math.h>
-
 #if     defined(__IS_COMPILER_ARM_COMPILER_5__)                                 \
     &&  defined(__ARM_2D_HAS_HELIUM__) && __ARM_2D_HAS_HELIUM__
-#   warning 'Arm Compiler 5 doesn\'t support Armv8.1-M architecture, please use Arm Compiler 5 instead. If you insist using Arm Compiler 5, __ARM_2D_HAS_HELIUM__ is forced to 0.'
+#   warning 'Arm Compiler 5 doesn\'t support Armv8.1-M architecture, please use \
+Arm Compiler 5 instead. If you insist using Arm Compiler 5,\
+ __ARM_2D_HAS_HELIUM__ is forced to 0.'
 #   undef __ARM_2D_HAS_HELIUM__
 #   define __ARM_2D_HAS_HELIUM__            0
 #endif
@@ -74,6 +74,8 @@ typedef float float16_t;
 #endif
 
 #endif
+
+#include "arm_math.h"
 
 
 #ifdef   __cplusplus
@@ -110,10 +112,7 @@ extern "C" {
 #define MUL_Q16(x,y)         (q31_t)((q63_t)((q63_t) (x) * (q63_t)(y)) >> 16)
 
 
-#define vec_rgb16              uint16x8_t
-#define vec_rgb32              uint32x4_t
 #define ARM_PIX_SCLTYP(sz)     ARM_CONNECT2(ARM_CONNECT2(uint, sz), _t)
-#define ARM_PIX_VECTYP(sz)     ARM_CONNECT2(vec_rgb,sz)
 
 #define ARM_2D_ANGLE(__ANGLE)  ((float)((float)(__ANGLE) * 3.1416926f / 180.0f))
 
@@ -121,14 +120,18 @@ extern "C" {
 
 #undef __QDADD
 #undef __QDSUB
-#define __QDADD(X, Y)     __qadd(X, __qdbl(Y))
-#define __QDSUB(X, Y)     __qsub(X, __qdbl(Y))
+//#define __QDADD(X, Y)     __qadd(X, __qdbl(Y))
+//#define __QDSUB(X, Y)     __qsub(X, __qdbl(Y))
+#define __QDADD(X, Y)     __QADD(X, __QADD(Y, Y))
+#define __QDSUB(X, Y)     __QSUB(X, __QADD(Y, Y))
+
+#define __LARGEINVF32       100.0f
 
 /*============================ TYPES =========================================*/
 /*============================ GLOBAL VARIABLES ==============================*/
 /*============================ PROTOTYPES ====================================*/
 
-#elif defined(__ARM_2D_CFG_UNSAFE_NO_SATURATION_IN_FIXED_POINT_FOR_PERFROMANCE__)
+#elif defined(__ARM_2D_CFG_UNSAFE_NO_SATURATION_IN_FIXED_POINT__)
 /*
  * @brief C custom defined QDADD
  */
